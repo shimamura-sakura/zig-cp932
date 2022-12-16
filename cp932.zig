@@ -57,6 +57,21 @@ pub fn encodeCodepoint(cp: u16) ?OneTwo {
     };
 }
 
+pub const FmtCP932Slice = struct {
+    slice: []const u8,
+    pub fn format(self: @This(), _: anytype, _: anytype, writer: anytype) !void {
+        var decoder = Decoder{};
+        for (self.slice) |b| {
+            if (decoder.input(b) catch |e| return try writer.print("{}", .{e})) |u|
+                try writer.print("{u}", .{u});
+        }
+    }
+};
+
+pub fn fmtCP932Slice(slice: []const u8) FmtCP932Slice {
+    return .{ .slice = slice };
+}
+
 test "decode" {
     const std = @import("std");
     const INPUT = [_]u8{

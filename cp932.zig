@@ -1,6 +1,6 @@
 pub const DecError = lookup.DecError;
 pub const decoder = lookup.Decoder(d_entries, d_litvals){};
-pub const encode = lookup.Encoder(e_entries, e_litvals).encode;
+pub const encoder = lookup.Encoder(e_entries, e_litvals).encode;
 const lookup = @import("cp932-lookup.zig");
 const d_entries = [_]lookup.Entry{
     .{ 0, 0, 0 },          .{ 0, 0, 0x01 },       .{ 0, 0, 0x02 },       .{ 0, 0, 0x03 },       .{ 0, 0, 0x04 },

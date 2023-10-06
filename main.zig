@@ -6,7 +6,7 @@ pub fn main() anyerror!void {
         130, 187, 130, 204, 137, 212, 130, 209, 130, 231, 130, 201, 130, 173,
         130, 191, 130, 195, 130, 175, 130, 240,
     };
-    var decoder = cp932.Decoder;
+    var decoder = cp932.decoder;
     for (in_jis) |byte|
         std.debug.print("{u}", .{try decoder.input(byte) orelse continue});
 }

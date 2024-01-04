@@ -1,7 +1,7 @@
 pub const Entry = struct { u8, u8, u16 };
 pub const Encode = union(enum) { single: u8, double: [2]u8 };
-pub const DecError = error{ InvalidFirst, InvalidSecond, NeverInCP932 };
-pub const EncError = error{InvalidCodepoint};
+pub const DecError = error{ InvalidFirst, InvalidSecond, NeverInCP932, NoSpaceLeft };
+pub const EncError = error{ InvalidCodepoint, NoSpaceLeft };
 fn isEntZero(entry: Entry) bool {
     return entry[0] == 0 and entry[1] == 0 and entry[2] == 0;
 }
@@ -31,6 +31,24 @@ pub fn Decoder(comptime entries: anytype, comptime litvals: anytype) type {
                 return lit;
             }
         }
+        pub fn calcU16Count(slice: []const u8) DecError!usize {
+            var count: usize = 0;
+            var decoder = @This(){};
+            for (slice) |b| if (try decoder.input(b)) |_| {
+                count += 1;
+            };
+            return count;
+        }
+        pub fn decodeSlice(slice: []const u8, buffer: []u16) DecError![]const u16 {
+            var index: usize = 0;
+            var decoder = @This(){};
+            for (slice) |b| if (try decoder.input(b)) |u| {
+                if (index + 1 > buffer.len) return error.NoSpaceLeft;
+                buffer[index] = u;
+                index += 1;
+            };
+            return buffer[0..index];
+        }
     };
 }
 pub fn Encoder(comptime entries: anytype, comptime litvals: anytype) type {
@@ -49,6 +67,31 @@ pub fn Encoder(comptime entries: anytype, comptime litvals: anytype) type {
                 @as(u8, @intCast(lit >> 0x8)),
                 @as(u8, @intCast(lit & 0xFF)),
             } };
+        }
+        pub fn calcU8Count(slice: []const u16) EncError!usize {
+            var count: usize = 0;
+            for (slice) |u| switch (try encode(u)) {
+                .single => count += 1,
+                .double => count += 2,
+            };
+            return count;
+        }
+        pub fn encodeSlice(slice: []const u16, buffer: []u8) EncError![]const u8 {
+            var index: usize = 0;
+            for (slice) |u| switch (try encode(u)) {
+                .single => |b| {
+                    if (index + 1 > buffer.len) return error.NoSpaceLeft;
+                    buffer[index] = b;
+                    index += 1;
+                },
+                .double => |bs| {
+                    if (index + 2 > buffer.len) return error.NoSpaceLeft;
+                    buffer[index + 0] = bs[0];
+                    buffer[index + 1] = bs[1];
+                    index += 2;
+                },
+            };
+            return buffer[0..index];
         }
     };
 }

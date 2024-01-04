@@ -64,8 +64,10 @@ for hi, lo_map in enumerate(uby_high):
 
 
 print('pub const DecError = lookup.DecError;')
-print('pub const Decoder = lookup.Decoder(d_entries, d_litvals){};')
-print('pub const encode = lookup.Encoder(e_entries, e_litvals).encode;')
+print('pub const decoder = Decoder{};')
+print('pub const Decoder = lookup.Decoder(d_entries, d_litvals);')
+print('pub const Encoder = lookup.Encoder(e_entries, e_litvals);')
+print('pub const encode  = Encoder.encode;')
 print('const lookup = @import("cp932-lookup.zig");')
 print('const d_entries = [_]lookup.Entry{')
 for i in range(0, len(j_entries), 5):
